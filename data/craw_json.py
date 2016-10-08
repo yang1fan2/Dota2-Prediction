@@ -6,13 +6,13 @@ import time
 if __name__ == '__main__':
     api = dota2api.Initialise("A0D097C39AFDA60C0A0B5F95DE85D348")
 
-    start_seq_num = 2250193456
+    start_seq_num = 2250241541
     max_matches_num = 100
     matches = []
     max_requests = 10000
     now = 0
     store_every_matches = 10000
-    cnt = 0
+    cnt = 3
     while now < max_requests:
         try:
             response = api.get_match_history_by_seq_num(start_at_match_seq_num=start_seq_num,
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             f = open("matches/%d(%d).pk"%(cnt,start_seq_num-1),"wb")
             #id_(last_seq_num).pk
             cPickle.dump(matches,f,protocol=cPickle.HIGHEST_PROTOCOL)
-            matches = []
+            matches[:] = []
             cnt+=1
             f.close()
 

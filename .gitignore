@@ -1,0 +1,3 @@
+*.pyc
+data/matches/*
+dota2/*
