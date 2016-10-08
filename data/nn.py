@@ -1,5 +1,5 @@
 from keras.models import Sequential,Model
-from keras.layers import Dense, Activation, Embedding
+from keras.layers import Dense, Activation, Embedding,merge
 from keras.layers import Input, Dense, Lambda, GlobalAveragePooling1D
 import numpy as np
 from keras.regularizers import l2, activity_l2
@@ -31,7 +31,8 @@ if __name__ == '__main__':
     player_dire = Lambda(lambda x:x[:,5:,:],output_shape=lambda x:(x[0],hero_size/2,x[2]))(hero_embed)
     team_radiant =  GlobalAveragePooling1D()(player_radiant)
     team_dire =  GlobalAveragePooling1D()(player_dire)
-    predict = Dense(1, input_dim = dim,activation='sigmoid',W_regularizer=l2(l2_lambda))(team_dire)
+    team_difference = merge([team_radiant,team_dire],mode=lambda x: x[0] - x[1],output_shape=lambda x:x[0])
+    predict = Dense(1, input_dim = dim,activation='sigmoid',W_regularizer=l2(l2_lambda))(team_difference)
     model = Model(input=x, output=predict)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.fit(train_x, train_y, batch_size=batch_size, nb_epoch=nb_epoch,
