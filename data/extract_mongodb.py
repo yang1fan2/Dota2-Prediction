@@ -12,20 +12,20 @@ def save_as_pk(data,filename):
     fout.close()
 
 def get_match_detail(m):
-    w = m['radiant_win']
+    w = m['radiant_win'] # whether radiant won
     radiant=[]
     dire = []
     for p in m['players']:
-        if p['player_slot'] >= 128:
+        if p['player_slot'] >= 128: # radiant team
             dire.append(p['hero_id'])
         else:
-            radiant.append(p['hero_id'])
+            radiant.append(p['hero_id']) # dire team
     if len(radiant)!=5 or len(dire)!=5:
         return (-1,-1)
     return (w,radiant + dire)
 
 if __name__ == '__main__':
-    client = MongoClient()
+    client = MongoClient() 
     db = client.dotabot
     matches = db.matches
     N = matches.count()
@@ -35,14 +35,14 @@ if __name__ == '__main__':
     bar = Bar('Processing', max=N)
     for i, m in enumerate(matches.find()):
         bar.next()
-        a,b = get_match_detail(m)
+        a,b = get_match_detail(m) 
         if a==-1:
             continue
         y.append(a)
         x.append(b)
     bar.finish()
-    X = np.array(x)
-    Y = np.array(y)
+    X = np.array(x) # features
+    Y = np.array(y) # label
 
     N = X.shape[0]
     print 'number of examples = ',N

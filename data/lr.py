@@ -29,8 +29,8 @@ def load_pk(filename):
         for i in range(5):
             assert players[i]<max_hero
             assert players[5+i]<max_hero
-            feature[cnt,1+players[i]] = 1
-            feature[cnt,max_hero+1+players[5+i]] = 1
+            feature[cnt,1+players[i]] = 1 #radiant feature
+            feature[cnt,max_hero+1+players[5+i]] = 1 # dire feature
         cnt += 1
     y = [int(e) for e in y]
     y = np.array(y)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     (train_x, train_y) = load_pk("%s/train.pk"%directory)
     (valid_x, valid_y) = load_pk("%s/valid.pk"%directory)
     (test_x, test_y) = load_pk("%s/test.pk"%directory)
-    x = Input(batch_shape=(batch_size, 2*max_hero + 1))
+    x = Input(batch_shape=(batch_size, 2*max_hero + 1)) # input data
     predict = Dense(1, input_dim = 2*max_hero+1,activation='sigmoid',W_regularizer=l2(l2_lambda))(x)    
     model = Model(input=x, output=predict)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])

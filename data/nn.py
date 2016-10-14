@@ -27,10 +27,11 @@ if __name__ == '__main__':
     (valid_x, valid_y) = load_pk("%s/valid.pk"%directory)
     (test_x, test_y) = load_pk("%s/test.pk"%directory)
     x = Input(batch_shape=(batch_size, hero_size))
-    hero_embed = Embedding(max_hero, dim,input_length=hero_size)(x)#(batch,10, dim)
+    hero_embed = Embedding(max_hero, dim,input_length=hero_size)(x)#shape = (batch,10, dim)
     player_radiant = Lambda(lambda x:x[:,0:5,:],output_shape=lambda x:(x[0],hero_size/2,x[2]))(hero_embed)
+    # split into (batch,5, dim) and (batch,5, dim)
     player_dire = Lambda(lambda x:x[:,5:,:],output_shape=lambda x:(x[0],hero_size/2,x[2]))(hero_embed)
-    team_radiant =  GlobalAveragePooling1D()(player_radiant)
+    team_radiant =  GlobalAveragePooling1D()(player_radiant) # average player
     team_dire =  GlobalAveragePooling1D()(player_dire)
     team_dense = Dense(1, W_regularizer=l2(l2_lambda))
     a_radient =  team_dense(team_radiant)
