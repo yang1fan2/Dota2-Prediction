@@ -38,9 +38,10 @@ def load_pk(filename):
     return (feature,y)
 
 if __name__ == '__main__':
-    (train_x, train_y) = load_pk("10k/train.pk")
-    (valid_x, valid_y) = load_pk("10k/valid.pk")
-    (test_x, test_y) = load_pk("10k/test.pk")
+    directory = "mongodb"
+    (train_x, train_y) = load_pk("%s/train.pk"%directory)
+    (valid_x, valid_y) = load_pk("%s/valid.pk"%directory)
+    (test_x, test_y) = load_pk("%s/test.pk"%directory)
     x = Input(batch_shape=(batch_size, 2*max_hero + 1))
     predict = Dense(1, input_dim = 2*max_hero+1,activation='sigmoid',W_regularizer=l2(l2_lambda))(x)    
     model = Model(input=x, output=predict)
