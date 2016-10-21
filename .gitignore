@@ -1,3 +1,5 @@
 *.pyc
 data/matches/*
 dota2/*
+data/100k_very_high/*
+data/very_high/*

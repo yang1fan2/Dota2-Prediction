@@ -8,6 +8,8 @@ def save_as_pk(data,filename):
     fout.close()
 
 def get_match_detail(m):
+    if m['duration']<=600 or m['duration']>=2100:
+        return (-1,-1)
     w = m['radiant_win']
     radiant=[]
     dire = []
@@ -21,7 +23,7 @@ def get_match_detail(m):
     return (w,radiant + dire)
 
 if __name__ == '__main__':
-    list_dirs = os.walk("matches") 
+    list_dirs = os.walk("match_detail_very_high") 
     y = []
     x = []
     for root, dirs, files in list_dirs: 
@@ -30,9 +32,10 @@ if __name__ == '__main__':
             if not "pk" in filename:
                 continue
             fin = open(filename,'rb')
+            print filename
             matches = cPickle.load(fin)
             fin.close()
-            print filename
+            
 
             for m in matches:
                 a,b = get_match_detail(m)
@@ -40,7 +43,7 @@ if __name__ == '__main__':
                     continue
                 y.append(a)
                 x.append(b)
-            
+            #break
     X = np.array(x)
     Y = np.array(y)
     N = X.shape[0]
@@ -51,9 +54,9 @@ if __name__ == '__main__':
     valid_y = Y[int(N*.9):int(N*.95)]
     test_x = X[int(N*.95):,:]
     test_y = Y[int(N*.95):]
-    save_as_pk((train_x, train_y),"200k/train.pk")
-    save_as_pk((valid_x, valid_y),"200k/valid.pk")
-    save_as_pk((test_x, test_y),"200k/test.pk")
+    save_as_pk((train_x, train_y),"100k_very_high/train.pk")
+    save_as_pk((valid_x, valid_y),"100k_very_high/valid.pk")
+    save_as_pk((test_x, test_y),"100k_very_high/test.pk")
     
 
     

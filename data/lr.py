@@ -38,7 +38,7 @@ def load_pk(filename):
     return (feature,y)
 
 if __name__ == '__main__':
-    directory = "mongodb"
+    directory = "100k_very_high"
     (train_x, train_y) = load_pk("%s/train.pk"%directory)
     (valid_x, valid_y) = load_pk("%s/valid.pk"%directory)
     (test_x, test_y) = load_pk("%s/test.pk"%directory)
