@@ -15,3 +15,4 @@ There are four collections in mongoDB (db name is 701)
 - hero: http://api.herostats.io/ (hero id bug is fixed)
 - matches: https://wiki.teamfortress.com/wiki/WebAPI/GetMatchDetails (1M matches)
 - player: 200k players' profile (MMR rating, winning and losing games, played heroes and etc.). Each player has at least 100 matches in the above 1M matches. (https://www.opendota.com/players/89593976)
+- distribution https://www.opendota.com/distributions
