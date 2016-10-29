@@ -30,46 +30,74 @@ def crawl_ids_MMRs(players):
     bar.finish()
     return ids_MMRs
 
-# format: [radiant1_MMR, radiant1_percentile, ..., dire5_MMR, dire5_percentile]
+# Format: [radiant_avg_MMR, radiant_avg_percentile, dire_avg_MMR, dire_avg_percentile] -> 4 dimensions
 def extract_player_rank(m, thr, ids_MMRs, MMR_dist):
     nonexistent_players = 0
-    w = m['radiant_win'] # whether radiant won
-    radiant = []
-    dire = []
+    exist_radiant_count = 0
+    exist_dire_count = 0
+    radiant_count = 0
+    dire_count = 0
     total_players = MMR_dist[-1]
+    y = m['radiant_win'] # whether radiant won
+    radiant = [0.0, 0.0]
+    dire = [0.0, 0.0]
 
     for p in m['players']:
-        MMR = 0
-        percentile = 0  # based on Solo MMR
         id = p['account_id']
-
-        # Check for non-existent players
-        if id == 4294967295 or not ids_MMRs.has_key(id):
-            nonexistent_players += 1
-            # Skip this match if non-existent players > threshold
-            if nonexistent_players > thr:
-                return (-1, -1)
-            # Missing values: will impute with the average values later
-            MMR = float('NaN')
-            percentile = float('NaN')
-        else:
-            MMR = ids_MMRs[id]
-            percentile = float(MMR_dist[MMR // 100]) / float(total_players) * 100.0            
-        # print (MMR, percentile)
 
         # player_slot: 0 ~ 5 for radiants, 128 ~ 132 for dires
         if p['player_slot'] >= 128:
             # dire team
-            dire.append(MMR)
-            dire.append(percentile)
+            dire_count += 1
+            # Check for non-existent players
+            if id == 4294967295 or not ids_MMRs.has_key(id):
+                nonexistent_players += 1
+                # Skip this match if non-existent players > threshold
+                if nonexistent_players > thr:
+                    return (-1, -1)
+            else:
+                exist_dire_count += 1
+                MMR = ids_MMRs[id]
+                percentile = float(MMR_dist[MMR // 100]) / float(total_players) * 100.0  # based on Solo MMR
+                dire[0] += float(MMR)
+                dire[1] += percentile
+
         else:
             # radiant team
-            radiant.append(MMR)
-            radiant.append(percentile)
+            radiant_count += 1
+            # Check for non-existent players
+            if id == 4294967295 or not ids_MMRs.has_key(id):
+                nonexistent_players += 1
+                # Skip this match if non-existent players > threshold
+                if nonexistent_players > thr:
+                    return (-1, -1)
+            else:
+                exist_radiant_count += 1
+                MMR = ids_MMRs[id]
+                percentile = float(MMR_dist[MMR // 100]) / float(total_players) * 100.0  # based on Solo MMR
+                radiant[0] += float(MMR)
+                radiant[1] += percentile
+        # print (MMR, percentile)
 
-    if len(radiant) != 10 or len(dire) != 10:
+    if radiant_count != 5 or dire_count != 5:
         return (-1,-1)
-    return (w, radiant + dire)
+
+    # If all teammates have missing values, impute later with the average values
+    # Otherwise, take the average
+    if exist_radiant_count == 0:
+        radiant = [float('NaN'), float('NaN')]
+    else:
+        radiant[0] /= float(exist_radiant_count)
+        radiant[1] /= float(exist_radiant_count)
+
+    if exist_dire_count == 0:
+        dire = [float('NaN'), float('NaN')]
+    else:
+        dire[0] /= float(exist_dire_count)
+        dire[1] /= float(exist_dire_count)
+
+    return (radiant + dire, y)
+
 
 if __name__ == '__main__':
     # Parameters
@@ -80,8 +108,8 @@ if __name__ == '__main__':
     matches = db['matches']
     players = db['player']
     dist = db['distribution']
-    y = []
     x = []
+    y = []
 
     MMR_dist = crawl_MMR_dist(dist)
     ids_MMRs = crawl_ids_MMRs(players)
@@ -94,12 +122,12 @@ if __name__ == '__main__':
     for i, m in enumerate(matches.find()):
         bar.next()
         a,b = extract_player_rank(m, thr, ids_MMRs, MMR_dist)
-        # print; print b
+        # print; print a
         # Skip those matches with too many non-existent players or that are not 5 vs 5
-        if a == -1:
+        if b == -1:
             continue
-        y.append(a)
-        x.append(b)
+        x.append(a)
+        y.append(b)
     bar.finish()
 
     X = np.array(x) # features
@@ -110,4 +138,4 @@ if __name__ == '__main__':
     imp.fit(X)
     X = imp.transform(X)
 
-    save_as_pk((X, Y), "player_rank.pk")
+    save_as_pk((X, Y), "player_rank_avg.pk")
