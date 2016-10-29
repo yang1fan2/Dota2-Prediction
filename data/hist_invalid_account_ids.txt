@@ -1,5 +1,5 @@
 Number of matches: 968352
-Histogram of invalid account ids:
+Histogram of invalid account ids (account_id = 4294967295):
 0: 258922
 1: 292631
 2: 203260

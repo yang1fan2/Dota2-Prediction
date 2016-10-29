@@ -9,8 +9,7 @@ def crawl_account_ids(players):
     # Skip those players without profiles to prevent errors
     for p in players.find({'profile': {'$exists': True}}):
         bar.next()
-        # print ''
-        # print p['profile']['account_id']
+        # print; print p['profile']['account_id']
         account_ids.add(p['profile']['account_id'])
     bar.finish()
     return account_ids
@@ -18,16 +17,13 @@ def crawl_account_ids(players):
 def get_nonexistent_players(m, account_ids):
     nonexistent_players = 0
     for p in m['players']:
-        # magic number according to data/info.txt
         # non-existent player: invalid account_id or not in player collection
         account_id = p['account_id']
-        if account_id == 4294967295:
-            # print ''
-            # print 'invalid account id'
+        if account_id == 4294967295: # magic number according to data/info.txt
+            # print; print 'invalid account id'
             nonexistent_players += 1
-        elif not account_id in account_ids:
-            # print ''
-            # print 'account id not in player collection'
+        elif account_id not in account_ids:
+            # print; print 'account id not in player collection'
             nonexistent_players += 1
     return nonexistent_players
 
@@ -37,7 +33,6 @@ if __name__ == '__main__':
     matches = db['matches']
     N = matches.count()
 
-    # print 'Crawling ', db['player'].count(), 'account ids...'
     account_ids = crawl_account_ids(db['player'])
 
     print 'Number of matches: ', N
@@ -46,8 +41,7 @@ if __name__ == '__main__':
     for i, m in enumerate(matches.find()):
         bar.next()
         non = get_nonexistent_players(m, account_ids)
-        # print ''
-        # print non
+        # print; print non
         hist[non] += 1
     bar.finish()
 
@@ -60,3 +54,4 @@ if __name__ == '__main__':
     for i, count in enumerate(hist):
         print str(i) + ': ' + str(count)
         file.write(str(i) + ': ' + str(count) + '\n')
+

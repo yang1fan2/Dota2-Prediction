@@ -16,17 +16,17 @@ def get_match_detail(m):
     radiant=[]
     dire = []
     for p in m['players']:
-        if p['player_slot'] >= 128: # radiant team
+        if p['player_slot'] >= 128: # dire team
             dire.append(p['hero_id'])
         else:
-            radiant.append(p['hero_id']) # dire team
+            radiant.append(p['hero_id']) # radiant team
     if len(radiant)!=5 or len(dire)!=5:
         return (-1,-1)
     return (w,radiant + dire)
 
 if __name__ == '__main__':
     client = MongoClient() 
-    db = client.dotabot
+    db = client['701']
     matches = db.matches
     N = matches.count()
     print N
