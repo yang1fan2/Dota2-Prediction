@@ -18,19 +18,20 @@ def crawl_MMR_dist(dist):
         MMR_dist.append(bin['cumulative_sum'])
     return MMR_dist
 
-def crawl_account_ids(players):
-    account_ids = set()
-    bar = Bar('Crawling account ids', max = players.count())
+def crawl_ids_MMRs(players):
+    # Put <account id, MMR> pair in a dictionary
+    ids_MMRs = {}
+    bar = Bar('Crawling account ids and MMRs', max = players.count())
     # Skip those players without profiles to prevent errors
     for p in players.find({'profile': {'$exists': True}}):
         bar.next()
         # print; print p['profile']['account_id']
-        account_ids.add(p['profile']['account_id'])
+        ids_MMRs[p['profile']['account_id']] = p['mmr_estimate']['estimate']
     bar.finish()
-    return account_ids
+    return ids_MMRs
 
 # format: [radiant1_MMR, radiant1_percentile, ..., dire5_MMR, dire5_percentile]
-def extract_player_rank(m, thr, account_ids, players, MMR_dist):
+def extract_player_rank(m, thr, ids_MMRs, MMR_dist):
     nonexistent_players = 0
     w = m['radiant_win'] # whether radiant won
     radiant = []
@@ -43,7 +44,7 @@ def extract_player_rank(m, thr, account_ids, players, MMR_dist):
         id = p['account_id']
 
         # Check for non-existent players
-        if id == 4294967295 or id not in account_ids:
+        if id == 4294967295 or not ids_MMRs.has_key(id):
             nonexistent_players += 1
             # Skip this match if non-existent players > threshold
             if nonexistent_players > thr:
@@ -52,7 +53,7 @@ def extract_player_rank(m, thr, account_ids, players, MMR_dist):
             MMR = float('NaN')
             percentile = float('NaN')
         else:
-            MMR = players.find_one({'account_id': id})['mmr_estimate']['estimate']
+            MMR = ids_MMRs[id]
             percentile = float(MMR_dist[MMR // 100]) / float(total_players) * 100.0            
         # print (MMR, percentile)
 
@@ -83,39 +84,30 @@ if __name__ == '__main__':
     x = []
 
     MMR_dist = crawl_MMR_dist(dist)
-    account_ids = crawl_account_ids(players)
-    print str(len(account_ids)) + 'players with profiles and account ids'
+    ids_MMRs = crawl_ids_MMRs(players)
+    print str(len(ids_MMRs)) + ' players with account ids and MMRs'
 
     N = matches.count()
     print str(N) + ' matches found'
-    N_extracted = 0
 
     bar = Bar('Extracting player-rank features in matches', max = N)
     for i, m in enumerate(matches.find()):
         bar.next()
-        a,b = extract_player_rank(m, thr, account_ids, players, MMR_dist)
+        a,b = extract_player_rank(m, thr, ids_MMRs, MMR_dist)
         # print; print b
         # Skip those matches with too many non-existent players or that are not 5 vs 5
         if a == -1:
             continue
-        N_extracted += 1
-        # print; print N_extracted
         y.append(a)
         x.append(b)
     bar.finish()
 
-    N = X.shape[0]
-    print 'Number of matches extracted: ' + str(N)
-    print 'N_extracted = ' + str(N_extracted) # Just to verify the count
     X = np.array(x) # features
     Y = np.array(y) # label
+    print 'Number of matches extracted: ' + str(X.shape[0])
     # Replace NaN with mean value
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
     imp.fit(X)
     X = imp.transform(X)
 
     save_as_pk((X, Y), "player_rank.pk")
-    
-
-    
-    
