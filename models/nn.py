@@ -9,6 +9,8 @@ from keras.layers import Input, Dense, Lambda, GlobalAveragePooling1D
 import numpy as np
 from keras.regularizers import l2, activity_l2,l1, activity_l1
 from six.moves import cPickle
+from sklearn.preprocessing import Imputer
+from sklearn import preprocessing
 
 batch_size = 32
 hero_size = 10
@@ -16,8 +18,8 @@ dim = 128
 max_hero = 130
 nb_epoch = 20
 
-l2_lambda = 0.00001
-l1_lambda = 0.00001
+l2_lambda = 0.001
+l1_lambda = 0.0001
 # [1] binary hero id: 113 * 2 = 226 dim 0
 # [2] hero attributes: 10 * 26 = 260 dim 226
 # [3] hero_winrate: 5 * 5 = 25 dim 486
@@ -46,16 +48,32 @@ def choose_feature(train_x, test_x, feature):
 
     return np.concatenate(train,axis = 1),np.concatenate(test,axis = 1)
 
+def normalize(X):
+    #replace NaN with mean value
+    imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
+    imp.fit(X)
+    X = imp.transform(X)
+
+    # scale to 0-1
+    min_max_scaler = preprocessing.MinMaxScaler()
+    X_scaled = min_max_scaler.fit_transform(X)
+
+    return X_scaled
+
 if __name__ == '__main__':
     directory = "../match_data/small_match"
     (train_x, train_y) = load_dict("%s_train.pk"%directory)
     (test_x, test_y) = load_dict("%s_test.pk"%directory)
-    train_x, test_x = choose_feature(train_x, test_x, feature)
+
+    train_x = normalize(train_x)
+    test_x = normalize(test_x)
+
+    #train_x, test_x = choose_feature(train_x, test_x, feature)
     feature_dim = train_x.shape[1]
     print 'feature_dim = ',feature_dim
     print 'test examples = ',test_x.shape[0]
     x = Input(batch_shape=(batch_size, feature_dim)) # input data
-    layer_1 = Dense(128, input_dim = feature_dim,activation='relu',W_regularizer=l1(l1_lambda))(x)    
+    layer_1 = Dense(32, input_dim = feature_dim,activation='relu',W_regularizer=l1(l1_lambda))(x)    
     predict = Dense(1, input_dim = 128,activation='sigmoid',W_regularizer=l1(l1_lambda))(layer_1)    
     model = Model(input=x, output=predict)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
