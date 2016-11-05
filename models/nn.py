@@ -55,7 +55,8 @@ if __name__ == '__main__':
     print 'feature_dim = ',feature_dim
     print 'test examples = ',test_x.shape[0]
     x = Input(batch_shape=(batch_size, feature_dim)) # input data
-    predict = Dense(1, input_dim = feature_dim,activation='sigmoid',W_regularizer=l2(l2_lambda))(x)    
+    layer_1 = Dense(128, input_dim = feature_dim,activation='relu',W_regularizer=l1(l1_lambda))(x)    
+    predict = Dense(1, input_dim = 128,activation='sigmoid',W_regularizer=l1(l1_lambda))(layer_1)    
     model = Model(input=x, output=predict)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.fit(train_x, train_y, batch_size=batch_size, nb_epoch=nb_epoch,
