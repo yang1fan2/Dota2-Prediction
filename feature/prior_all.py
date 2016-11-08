@@ -6,6 +6,8 @@ from six.moves import cPickle
 import numpy as np
 from sklearn import preprocessing
 from sklearn.preprocessing import Imputer
+from random import shuffle
+
 
 def save_as_pk(data,filename):
     fout = open(filename,'wb')
@@ -16,49 +18,24 @@ def load_dict(filename):
     fin = open(filename, 'rb')
     return cPickle.load(fin)
 
-# Format: [hero_id * 226, hero_attr * 260, hero_winrate * 25, player_mmrpec * 20, hero_player * 80] -> 611 dimensions
-# Skip those matches that are not 5 vs 5, with hero_id = 0 or 108, or with too many non-existent players
-def extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player):
+# Format: [hero_id * 226, hero_attr * 260, hero_winrate * 25, player_mmrpec * 20, hero_player_attr * 70, hero_player_winrate * 10] -> 611 dimensions
+# Skip those matches that are not 5 vs 5, with hero_id = 0 , or with too many non-existent players
+def extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player_attr, hero_player_winrate):
     num_heros = 113  # according to hero_id.json, but "id": 24 is missing
     nonexistent_players = 0
-    y = m['radiant_win']  # whether radiant won
-
-    if len(m['players']) != 10:
-        # print; print '< 10 players'
-        return (-1, -1)
-
     # Save the hero ids and account ids for each team
-    radiant_heros = []
-    radiant_accts = []
-    dire_heros = []
-    dire_accts = []
+    radiant_heros = m[:5]
+    radiant_accts = m[10:15]
+    dire_heros = m[5:10]
+    dire_accts = m[15:20]
+    if m[20]=='True':
+        y =1
+    elif m[20]=='False':
+        y=0
+    else:
+        assert 1==0
+    
 
-    for p in m['players']:
-        # Skip matches with any hero_id is 0 or 108 (no attributes in database)
-        hero_id = str(p['hero_id'])
-        if hero_id == '0' or hero_id == '108':
-            # print; print 'invalid hero id'
-            return (-1, -1)
-
-        acct_id = str(p['account_id'])
-        # Check for non-existent players: 4294967295 is a magic number according to data/info.txt
-        if acct_id == '4294967295' or not player_mmrpec.has_key(acct_id):
-            nonexistent_players += 1
-            # Skip this match if non-existent players > threshold
-            if nonexistent_players > thr:
-                # print; print 'non-existent players > ' + str(thr)
-                return (-1, -1)
-            # Mark it as 'unknown_player' to look up in dictionaries
-            acct_id = 'unknown_player'
-
-        if p['player_slot'] < 5:
-            # radiant team (slot 0 ~ 4)
-            radiant_heros += [hero_id]
-            radiant_accts += [acct_id]
-        else:
-            # dire team (slot 128 ~ 132)
-            dire_heros += [hero_id]
-            dire_accts += [acct_id]
 
     # print
     # print 'radiant_heros', radiant_heros
@@ -74,8 +51,10 @@ def extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player):
     f_hero_winrate = []
     # [4] player_mmrpec: 10 * 2 = 20 dim
     f_player_mmrpec = []
-    # [5] hero_player: 10 * 8 = 80 dim
-    f_hero_player = []
+    # [5] hero_player_attr: 10 * 7 = 70 dim
+    f_hero_player_attr = []
+    # [6] hero_player_winrate: 10 * 7 = 10 dim
+    f_hero_player_winrate = []
 
     # Loop through radiant team players
     for r in range(5):
@@ -86,13 +65,14 @@ def extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player):
         f_hero_id[int(r_hero) - 1] = 1
         f_hero_attr += hero_attr[r_hero]
         f_player_mmrpec += player_mmrpec[r_acct]
-        f_hero_player += hero_player[r_hero][r_acct]
-
+        f_hero_player_attr += list(hero_player_attr[r_hero][r_acct])
+        assert len(list(hero_player_attr[r_hero][r_acct]))==7
+        f_hero_player_winrate += [hero_player_winrate[r_hero][r_acct]]
         # Loop through radiant-dire pairs
         for d in range(5):
             d_hero = dire_heros[d]
             f_hero_winrate += [hero_winrate[r_hero][d_hero]]
-
+            
     # Loop through dire team players
     for d in range(5):
         d_hero = dire_heros[d]
@@ -102,9 +82,12 @@ def extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player):
         f_hero_id[int(d_hero) - 1 + num_heros] = 1
         f_hero_attr += hero_attr[d_hero]
         f_player_mmrpec += player_mmrpec[d_acct]
-        f_hero_player += hero_player[d_hero][d_acct]
 
-    x = f_hero_id + f_hero_attr + f_hero_winrate + f_player_mmrpec + f_hero_player
+        f_hero_player_attr += list(hero_player_attr[d_hero][d_acct])
+        assert len(list(hero_player_attr[d_hero][d_acct]))==7
+        f_hero_player_winrate += [hero_player_winrate[d_hero][d_acct]]
+
+    x = f_hero_id + f_hero_attr + f_hero_winrate + f_player_mmrpec + f_hero_player_attr + f_hero_player_winrate
 
     # print; print f_hero_player
     # print; print len(x)
@@ -113,42 +96,56 @@ def extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player):
 if __name__ == '__main__':
     # Parameters
     thr = 2;  # maximum tolerance threshold on the number of non-existent players in a match
-
-    client = MongoClient()
-    db = client['701']
-    matches = db['matches']
-    players = db['player']
-    dist = db['distribution']
+    matches = load_dict('new_match.pk')
     x = []
     y = []
-    N = matches.count()
+    N = matches.shape[0]
     print str(N) + ' matches the dataset'
 
     # Load the .pk dictionaries
     print 'Loading dictionaries in .pk...'
     player_mmrpec = load_dict('player_mmrpec.pk')
     # Plug in average MMR and percentile calculated in avg_mmr_perc.py
-    player_mmrpec['unknown_player'] = [4511.53467731, 87.973183224]
+    player_mmrpec['unknown_player'] = [4511.53467731, 0.897862092646]
     hero_winrate = load_dict('hero_winrate.pk')
     hero_attr = load_dict('hero_attr.pk')
-    # hero_player pk file TOO LARGE. Skip it for now
-    hero_player = load_dict('hero_player.pk')
+    hero_player_attr = load_dict('hero_player_attr.pk')
+    hero_player_winrate = load_dict('hero_player_winrate.pk')
+    
     print 'Done!'
-
+    D = []
     bar = Bar('Extracting all prior features in matches', max = N)
-    for i, m in enumerate(matches.find()):
+    for i, m in enumerate(matches):
         bar.next()
-        a,b = extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player)
+        a,b = extract_prior(m, thr, player_mmrpec, hero_winrate, hero_attr, hero_player_attr, hero_player_winrate)
         # print; print a
         # Skip those matches that are not 5 vs 5, with hero_id = 0, or with too many non-existent players
+        minutes = float(m[-2])/60.
+        if minutes<=20 or minutes>=60:
+            continue
         if b == -1:
             continue
+
         x.append(a)
-        y.append(b)
+        y.append(b)        
+
+        D.append(minutes)
+
     bar.finish()
 
-    X = np.array(x) # features
-    Y = np.array(y) # label
+    X = np.array(x, dtype='float32') # features
+    Y = np.array(y, dtype='float32') # label
+    D = np.array(D, dtype='float32') # label
     print 'Extracted ' + str(X.shape[0]) + ' valid matches, each with ' + str(X.shape[1]) + ' features'
-
-    save_as_pk((X, Y), "prior_all.pk")
+    N = X.shape[0]
+    assert X.shape[0]==Y.shape[0]
+    idx = range(N)
+    shuffle(idx)
+    train_X = X[idx[:int(N*.9)]]
+    train_Y = Y[idx[:int(N*.9)]]
+    train_D = D[idx[:int(N*.9)]]
+    test_X = X[idx[int(N*.9):]]
+    test_Y = Y[idx[int(N*.9):]]
+    test_D = D[idx[int(N*.9):]]
+    save_as_pk((train_X, train_Y, train_D), "new_match_duration_train.pk")
+    save_as_pk((test_X, test_Y, test_D), "new_match_duration_test.pk")
