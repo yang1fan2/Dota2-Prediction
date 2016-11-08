@@ -42,14 +42,14 @@ def nn():
 classifiers = {
 
     'nn': nn,
-    'LR': logistic_regression,
+    'LR': logistic_regression
     
 }
 
 
 if __name__ == '__main__':
     
-    train_x, train_y, test_x, test_y = load_data("../match_data/new_match")
+    train_x, train_y, test_x, test_y,test_D = load_data("../match_data/new_match_duration")
     train_x, test_x = choose_feature(train_x, test_x, param.feature)
 
     feature_dim = train_x.shape[1]
@@ -61,5 +61,25 @@ if __name__ == '__main__':
         model = classifier()
         model.fit(train_x, train_y, batch_size=param.batch_size, nb_epoch=param.nb_epoch)
         score, acc = model.evaluate(test_x, test_y, batch_size=param.batch_size)
+        pred = model.predict(test_x, batch_size=param.batch_size)
         print '\n ',name
         print ' test acc ',acc
+        '''
+        cnt = [0]*13
+        ac = [0]*13
+        
+        for i in range(test_x.shape[0]):
+            
+            idx = int(test_D[i]/5)
+            cnt[idx] += 1
+            if pred[i]>=0.5 and test_y[i]==1:
+                ac[idx] += 1.0
+            if pred[i]<0.5 and test_y[i]==0:
+                ac[idx] += 1.0
+        print cnt
+        print ac
+        for i in range(8):
+            print ac[i+4]/cnt[i+4]
+        print sum(ac)/sum(cnt)
+   
+'''
