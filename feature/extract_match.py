@@ -92,10 +92,15 @@ if __name__ == '__main__':
     for i, m in enumerate(matches.find()):
         bar.next()
         a,b = extract_prior(m, thr, player_mmrpec)
+
         # print; print a
         # Skip those matches that are not 5 vs 5, with hero_id = 0, or with too many non-existent players    
         if b == -1:
             continue
+        minutes = float(a[-2])/60.
+        if minutes<=20 or minutes>=60:
+            continue
+
         x.append(a)
 
     bar.finish()

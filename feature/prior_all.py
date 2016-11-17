@@ -149,3 +149,4 @@ if __name__ == '__main__':
     test_D = D[idx[int(N*.9):]]
     save_as_pk((train_X, train_Y, train_D), "new_match_duration_train.pk")
     save_as_pk((test_X, test_Y, test_D), "new_match_duration_test.pk")
+

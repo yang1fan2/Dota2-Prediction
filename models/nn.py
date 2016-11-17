@@ -8,9 +8,8 @@ from keras.layers import Dense, Activation, Embedding
 from keras.layers import Input, Dense, Lambda, GlobalAveragePooling1D
 import numpy as np
 from keras.regularizers import l2, activity_l2,l1, activity_l1
-from six.moves import cPickle
-from sklearn.preprocessing import Imputer
-from sklearn import preprocessing
+from utils import *
+
 
 batch_size = 32
 hero_size = 10
@@ -25,15 +24,15 @@ l1_lambda = 0.0001
 # [3] hero_winrate: 5 * 5 = 25 dim 486
 # [4] player_mmrpec: 10 * 2 = 20 dim 511
 # [5] hero_player: 10 * 8 = 80 dim 531
-    
+model_name = 'lr'
 feature = {'hero_id':[0,226]}#, 'winrate':[486,486+25]},'mmr':[511,511+20]
 
-def load_dict(filename):
-    fin = open(filename, 'rb')
-    return cPickle.load(fin)    
+  
 
 
 def choose_feature(train_x, test_x, feature):
+    if feature.size() == 0:
+        return train_x, test_x
     train = []
     test =[]
     for k,v in feature.items():
@@ -48,17 +47,9 @@ def choose_feature(train_x, test_x, feature):
 
     return np.concatenate(train,axis = 1),np.concatenate(test,axis = 1)
 
-def normalize(X):
-    #replace NaN with mean value
-    imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-    imp.fit(X)
-    X = imp.transform(X)
 
-    # scale to 0-1
-    min_max_scaler = preprocessing.MinMaxScaler()
-    X_scaled = min_max_scaler.fit_transform(X)
 
-    return X_scaled
+
 
 if __name__ == '__main__':
     directory = "../match_data/small_match"
@@ -72,6 +63,7 @@ if __name__ == '__main__':
     feature_dim = train_x.shape[1]
     print 'feature_dim = ',feature_dim
     print 'test examples = ',test_x.shape[0]
+
     x = Input(batch_shape=(batch_size, feature_dim)) # input data
     layer_1 = Dense(32, input_dim = feature_dim,activation='relu',W_regularizer=l1(l1_lambda))(x)    
     predict = Dense(1, input_dim = 128,activation='sigmoid',W_regularizer=l1(l1_lambda))(layer_1)    
