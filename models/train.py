@@ -14,15 +14,16 @@ class Param:
 
     nn_lambda = 0.001
     lr_lambda = 0.000001
+    T = 10
     # [1] binary hero id: 113 * 2 = 226 dim 0   'hero_id':[0,226]
     # [2] hero attributes: 10 * 26 = 260 dim 226  'hero_attr':[226,226+260]
     # [3] hero_winrate: 5 * 5 = 25 dim 486  'winrate':[486,486+25]
     # [4] player_mmrpec: 10 * 2 = 20 dim 511 'mmr':[511,511+20]
     # [5] hero_player_attr: 10 * 8 = 70 dim 531 'h_p_attr':[531,531+70]
     # [6] hero_player_winrate: 10 dim 601 'h_p_winrate':[601,601+10]
-    feature = {}#, },,
+    feature = {'realtime':[611+2*9,611+2*10]}#, },,#'prior':[0,611],
 param = Param()
-feature_dim = 611
+feature_dim = 611+22*param.T
 
 def logistic_regression():
     x = Input(batch_shape=(param.batch_size, feature_dim)) # input data
@@ -49,7 +50,7 @@ classifiers = {
 
 if __name__ == '__main__':
     
-    train_x, train_y, test_x, test_y,test_D = load_data("../match_data/new_match_duration")
+    train_x, train_y, test_x, test_y = load_data("../match_data/realtime")
     train_x, test_x = choose_feature(train_x, test_x, param.feature)
 
     feature_dim = train_x.shape[1]

@@ -45,8 +45,8 @@ def choose_feature(train_x, test_x, feature):
     return np.concatenate(train,axis = 1),np.concatenate(test,axis = 1)    
 
 def load_data(dir_name):
-    (train_x, train_y, train_D) = load_dict("%s_train.pk"%dir_name)
-    (test_x, test_y, test_D) = load_dict("%s_test.pk"%dir_name)
+    (train_x, train_y) = load_dict("%s_train.pk"%dir_name)
+    (test_x, test_y) = load_dict("%s_test.pk"%dir_name)
     train_x = normalize(train_x)
     test_x = normalize(test_x)
-    return train_x, train_y, test_x, test_y,test_D
+    return train_x, train_y, test_x, test_y
