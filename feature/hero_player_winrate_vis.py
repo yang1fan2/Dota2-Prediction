@@ -23,12 +23,12 @@ def crawl_acct_ids(players):
     bar.finish()
     return ids
 
-def barplot(p1, p2, mat, fig):
+def barplot(p1, p2, mat, fig_num):
     plot_X = np.arange(10)
     # [player 1 top 5 (descending), player 2 top 5 (descending]
     hero_sel1 = np.argsort(mat[p1,:])[-1:-6:-1]
     hero_sel2 = np.argsort(mat[p2,:])[-1:-6:-1]
-    if fig == 2:
+    if fig_num == 2:
         # [player 1 top (5,2,1,3,4), player 2 top (5,2,1,3,4)]
         hero_sel1 = hero_sel1[[4,1,0,2,3]]
         hero_sel2 = hero_sel2[[4,1,0,2,3]]
@@ -37,20 +37,28 @@ def barplot(p1, p2, mat, fig):
     plot_Y2 = mat[p2, np.hstack((hero_sel1, hero_sel2))]
     print plot_Y1
     print plot_Y2
-    plt.close(fig)
-    plt.figure(fig)
-    plt.bar(np.arange(len(plot_X)), +plot_Y1, facecolor='#9999ff', edgecolor='white')
-    plt.bar(np.arange(len(plot_X)), -plot_Y2, facecolor='#ff9999', edgecolor='white')
-    for x, y in zip(plot_X, plot_Y1):
-        plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom', fontsize=16)
-
-    for x, y in zip(plot_X, plot_Y2):
-        plt.text(x + 0.4, -y - 0.05, '%.2f' % y, ha='center', va='top', fontsize=16)
+    plt.close(fig_num)
+    plt.figure(fig_num)
+    fig, ax = plt.subplots()
+    bar1 = plt.bar(np.arange(len(plot_X)), +plot_Y1, facecolor='#9999ff', edgecolor='white')
+    bar2 = plt.bar(np.arange(len(plot_X)), -plot_Y2, facecolor='#ff9999', edgecolor='white')
+    # for x, y in zip(plot_X, plot_Y1):
+    #     plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom', fontsize=16)
+    #
+    # for x, y in zip(plot_X, plot_Y2):
+    #     plt.text(x + 0.4, -y - 0.05, '%.2f' % y, ha='center', va='top', fontsize=16)
 
     plt.xlim(-.5, len(plot_X))
     plt.xticks(())
-    plt.ylim(-1.2, +1.2)
+    plt.ylim(-1.1, +1.2)
     plt.yticks(())
+    # plt.title('Winning Rates of Two Players When Choosing Different Heros', fontname='Arial', fontweight='bold', fontsize=18)
+    plt.figlegend((bar1, bar2), ('Player A', 'Player B'), (0.68, 0.77))
+    # Remove figure borders
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
     plt.show()
 
 
@@ -98,32 +106,6 @@ if __name__ == '__main__':
             acct.append(p)
     mat = np.array(mat)
     print cnt_players, 'players'
-    # # Plot a heat map
-    # fig, ax = ppl.subplots(1)
-    # ppl.pcolormesh(fig, ax, mat)
-
-    # Calculate and sort pair-wise L1 distance
-    # dist = distance.squareform(distance.pdist(mat, 'cityblock'))
-    # # Found player 0 vs. player 42
-    # plot_X = np.arange(num_heros+1)
-    # # hero_sel = np.bitwise_and(player1 != 0.5, player2 != 0.5)
-    # hero_sel = [1,4,6,7,8,11,12,15,16,17]
-    # plot_Y1 = mat[0,hero_sel]
-    # plot_Y2 = mat[42,hero_sel]
-    # plt.figure()
-    # plt.bar(np.arange(len(hero_sel)), +plot_Y1, facecolor='#9999ff', edgecolor='white')
-    # plt.bar(np.arange(len(hero_sel)), -plot_Y2, facecolor='#ff9999', edgecolor='white')
-    # for x, y in zip(plot_X, plot_Y1):
-    #     plt.text(x + 0.4, y + 0.05, '%.2f' % y, ha='center', va='bottom')
-    #
-    # for x, y in zip(plot_X, plot_Y2):
-    #     plt.text(x + 0.4, -y - 0.05, '%.2f' % y, ha='center', va='top')
-    #
-    # plt.xlim(-.5, len(hero_sel))
-    # plt.xticks(())
-    # plt.ylim(-1.0, +1.0)
-    # plt.yticks(())
-    # plt.show()
 
     for p in range(mat.shape[0]):
         top_heros = np.argsort(mat[p,:])[-1:-6:-1]
