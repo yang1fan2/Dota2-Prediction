@@ -1,0 +1,8 @@
+match duration:
+db.matches.aggregate([{$group:{"_id": null ,avg:{$avg:{$multiply:["$duration",0.01666666666667]}}}}])
+db.matches.find({"duration":{$lte:1500}}).count()
+
+db.matches.find({"radiant_win":true}).count()/db.matches.find().count()
+db.matches.find({"game_mode":2}).count()
+ db.matches.ensureIndex( { match_id:1}, { unique:true, dropDups:true } )
+ db.matches.remove({match_id:2521034333},{justOne:true})

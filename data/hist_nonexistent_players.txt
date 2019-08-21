@@ -1,0 +1,13 @@
+Number of matches: 968352
+Histogram of non-existent players (invalid account ids or not in player collection)
+0: 15358
+1: 30262
+2: 37992
+3: 45189
+4: 52492
+5: 63598
+6: 81683
+7: 113298
+8: 174608
+9: 347464
+10: 6408
