@@ -1,0 +1,5 @@
+six==1.10.0
+dota2api
+progress
+keras
+theano
