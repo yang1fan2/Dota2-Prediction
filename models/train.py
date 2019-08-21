@@ -4,8 +4,8 @@ from sklearn.preprocessing import Imputer
 from utils import *
 from keras.models import Sequential,Model
 from keras.layers import Dense, Activation, Embedding
-from keras.layers import Input, Dense, Lambda, GlobalAveragePooling1D
-from keras.regularizers import l2, activity_l2,l1, activity_l1
+from keras.layers import Input, Dense, Lambda
+from keras.regularizers import l2, l1
 
 class Param:
     batch_size = 32

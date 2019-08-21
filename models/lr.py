@@ -1,9 +1,8 @@
-from sklearn.cross_validation import StratifiedKFold
 from keras.models import Sequential,Model
 from keras.layers import Dense, Activation, Embedding
-from keras.layers import Input, Dense, Lambda, GlobalAveragePooling1D
+from keras.layers import Input, Dense, Lambda
 import numpy as np
-from keras.regularizers import l2, activity_l2,l1, activity_l1
+from keras.regularizers import l2, l1
 from six.moves import cPickle
 from sklearn.preprocessing import Imputer
 from utils import *
