@@ -10,7 +10,7 @@ cd ../models; python2 lr.py
 ```
 
 ## Dota dataset stored as MongoDB dump (2.35 GB, 1M matches, 20K players and 111 heros). Crawled via the APIs.
-Availabe in Google [Drive](https://drive.google.com/open?id=0BwzxsWu2LtGyS0NiMktmNGxHem8)
+Availabe in Google [Drive](https://drive.google.com/open?id=0BwzxsWu2LtGyS0NiMktmNGxHem8).
 There are four collections in mongoDB (db name is 701)
 - benchmark: https://www.opendota.com/benchmarks
 - hero: http://api.herostats.io/ (hero id bug is fixed)
