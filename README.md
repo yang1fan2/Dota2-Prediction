@@ -1,3 +1,5 @@
+
+
 # Real-time Dota2 Match Result Prediction
 In this project, we try to predict the winning team of a Dota2 match. We consider prior (pre-match) features from individual players' match history, as well as real-time (during-match) features at each minute as the match progresses. We use logistic regression, the proposed Attribute Sequence Model, and their combinations as the prediction models. In a dataset of 78362 matches where 20631 matches contain replay data, our experiments show that adding more aspects of prior features improves accuracy from 58.69% to 71.49%, and introducing real-time features achieves up to 93.73% accuracy when predicting at the 40th minute.
 
@@ -11,7 +13,7 @@ cd ../models; python2 lr.py
 
 ## Dota dataset stored as MongoDB dump (2.35 GB, 1M matches, 20K players and 111 heros). Crawled via the APIs.
 Availabe in Google [Drive](https://drive.google.com/open?id=0BwzxsWu2LtGyS0NiMktmNGxHem8).
-There are four collections in mongoDB (db name is 701)
+There are five collections in mongoDB (db name is 701)
 - benchmark: https://www.opendota.com/benchmarks
 - hero: http://api.herostats.io/ (hero id bug is fixed)
 - matches: https://wiki.teamfortress.com/wiki/WebAPI/GetMatchDetails (1M matches)
